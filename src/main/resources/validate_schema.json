@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://example.com/plan.schema.json",
+  "title": "Plan validated schema",
+  "type": "object",
+  "required":[
+    "planCostShares",
+    "linkedPlanServices",
+    "_org",
+    "objectId",
+    "objectType",
+    "planType",
+    "creationDate"
+  ],
+  "properties": {
+    "planCostShares": {
+      "type": "object",
+      "title": "Plan cost shared schema",
+      "required":[
+        "deductible",
+        "_org",
+        "copay",
+        "objectId",
+        "objectType"
+      ],
+      "properties":{
+        "deductible":{
+          "type": "number",
+          "description": "The deductible",
+          "examples": [
+            2000
+          ],
+          "pattern": "^(.*)$"
+        },
+        "_org": {
+          "description": "The org",
+          "type": "string",
+          "examples": [
+            "example.com"
+          ],
+          "pattern": "^(.*)$"
+        },
+        "copay": {
+          "description": "The copay",
+          "type": "number",
+          "examples": [
+            23
+          ],
+          "pattern": "^(.*)$"
+        },
+        "objectId": {
+          "description": "Object id",
+          "type": "string"
+        },
+        "objectType": {
+          "description": "Object Type",
+          "type": "string"
+        }
+        }
+      },
+    "linkedPlanServices": {
+      "type": "array",
+      "title": "Linked plan services",
+      "items": {
+        "type": "object",
+        "title": "Linked plan services",
+        "required": [
+          "linkedService",
+          "planserviceCostShares",
+          "_org",
+          "objectId",
+          "objectType"
+        ],
+        "properties": {
+          "linkedService": {
+            "type": "object",
+            "title": "Linked service",
+            "required": [
+              "_org",
+              "objectId",
+              "objectType",
+              "name"
+            ],
+            "properties": {
+              "_org": {
+                "description": "The org",
+                "type": "string",
+                "examples": [
+                  "example.com"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "objectId": {
+                "description": "Object id",
+                "type": "string"
+              },
+              "objectType": {
+                "description": "Object Type",
+                "type": "string"
+              },
+              "name": {
+                "description": "Name",
+                "type": "string",
+                "examples": [
+                  "Yearly physical"
+                ]
+              }
+            }
+          },
+          "planserviceCostShares": {
+            "type": "object",
+            "title": "Linked service",
+            "required": [
+              "deductible",
+              "_org",
+              "copay",
+              "objectId",
+              "objectType"
+            ],
+            "properties": {
+              "deductible": {
+                "type": "number",
+                "description": "The deductible",
+                "examples": [
+                  10
+                ],
+                "pattern": "^(.*)$"
+              },
+              "_org": {
+                "description": "The org",
+                "type": "string",
+                "examples": [
+                  "example.com"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "copay": {
+                "type": "number",
+                "description": "The copay",
+                "examples": [
+                  0
+                ],
+                "pattern": "^(.*)$"
+              },
+              "objectId": {
+                "description": "Object id",
+                "type": "string"
+              },
+              "objectType": {
+                "description": "Object Type",
+                "type": "string"
+              }
+            }
+          },
+          "_org": {
+            "description": "The org",
+            "type": "string",
+            "examples": [
+              "example.com"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "objectId": {
+            "description": "Object id",
+            "type": "string"
+          },
+          "objectType": {
+            "description": "Object Type",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "_org": {
+      "description": "The org",
+      "type": "string",
+      "examples": [
+        "example.com"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "objectId": {
+      "description": "Object id",
+      "type": "string"
+    },
+    "objectType": {
+      "description": "Object Type",
+      "type": "string"
+    },
+    "planType": {
+      "description": "Plan Type",
+      "type": "string"
+    },
+    "creationDate": {
+      "description": "Creation Date",
+      "type": "string",
+      "examples": [
+        "12-12-2017"
+      ],
+      "pattern": "^(.*)$"
+    }
+  }
+}
