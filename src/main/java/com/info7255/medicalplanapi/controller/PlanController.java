@@ -31,7 +31,6 @@ public class PlanController {
         System.out.println(planObject);
 
         JSONObject plan = new JSONObject(planObject);
-        Object test = PlanController.class.getResourceAsStream("/validate_schema.json");
         JSONObject schemaJSON = new JSONObject(new JSONTokener(Objects.requireNonNull(PlanController.class.getResourceAsStream("/validate_schema.json"))));
 
         Schema schema = SchemaLoader.load(schemaJSON);
@@ -42,7 +41,7 @@ public class PlanController {
         }
 
         //TODO: change "plan:" to plan.getString("objectType") + ":"
-        String key = "plan:" + plan.getString("objectId");
+        String key = plan.getString("objectType")+":" + plan.getString("objectId");
         if(planService.isKeyPresent(key))
             throw new BadRequestException("Plan already exist.");
 
