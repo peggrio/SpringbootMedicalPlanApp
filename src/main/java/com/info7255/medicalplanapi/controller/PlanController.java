@@ -40,10 +40,9 @@ public class PlanController {
             throw new BadRequestException(e.getMessage());
         }
 
-        //TODO: change "plan:" to plan.getString("objectType") + ":"
         String key = plan.getString("objectType")+":" + plan.getString("objectId");
         if(planService.isKeyPresent(key))
-            throw new BadRequestException("Plan already exist.");
+            throw new BadRequestException("This object already exist.");
 
         String eTag = planService.createPlan(plan,key);
 
@@ -76,12 +75,12 @@ public class PlanController {
         HttpHeaders headersToSend = new HttpHeaders();
         headersToSend.setETag(eTag);
 
-        if(objectType.equals("plan") && ifNoneMatch.contains(eTag)){
+        if(objectType.equals(objectType) && ifNoneMatch.contains(eTag)){
             return new ResponseEntity<>(null, headersToSend, HttpStatus.NOT_MODIFIED);
         }
 
         Map<String, Object> result = planService.getPlan(key);
-        if(objectType.equals("plan")){
+        if(objectType.equals(objectType)){
             return new ResponseEntity<>(result, headersToSend, HttpStatus.OK);
         }
         return new ResponseEntity<>(result,HttpStatus.OK);
