@@ -1,13 +1,12 @@
 package com.info7255.medicalplanapi.service;
 
+import org.checkerframework.checker.units.qual.A;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
 import redis.clients.jedis.Jedis;
 
 import javax.print.attribute.standard.JobKOctets;
@@ -63,8 +62,6 @@ public class PlanService {
             }else if(value instanceof JSONArray){//it is linkedPlanServices
                 ArrayList<Object> result = jsonToList((JSONArray)value);
 
-                Map<String, Map<String, Object>> resultMap = new HashMap<>();
-
                 // Iterate through the ArrayList and convert each object to Map<String, Map<String, Object>>
                 for (Object obj : result) {
                     // Assuming 'obj' is a Map<String, Map<String, Object>>
@@ -100,14 +97,49 @@ public class PlanService {
     }
 
     public Map<String, Object> getPlan(String redisKey){
-        Map<String, Object> result = new HashMap<>();
-        Set<String> keys = jedis.keys(redisKey);
+        //store result
+        Map<String, Object> resultMap = new HashMap<>();
+        Set<String> keys = jedis.keys(redisKey + ":*");//find all sub objects under this key
+        keys.add(redisKey);//add itself
+
         for(String key: keys){
-            System.out.println(key);
-            Map<String, String> value = jedis.hgetAll(key);
-            result.put(redisKey,value);
+            if(key.equals(redisKey)){
+                Map<String, String> contentMap = jedis.hgetAll(key);
+                for(String subKeys: contentMap.keySet()){
+                    if(!subKeys.equalsIgnoreCase("eTag")){
+                        resultMap.put(subKeys, isInteger(contentMap.get(subKeys))? Integer.parseInt(contentMap.get(subKeys)):contentMap.get(subKeys));//convert to Int if needed
+                    }
+                }
+            }else{//they are sub objects, like plan:12xvxc345ssdsds-501:planCostShares
+                String newKey = key.substring((redisKey+":").length());//it extracts a substring from the string key, starting from the position equal to the length of the [redisKey:]
+                //Set<String> members = jedis.smembers(key);
+//                smembers plan:12xvxc345ssdsds-501:linkedPlanServices
+//                1) "planservice:27283xvx9asdff-504"
+//                2) "planservice:27283xvx9sdf-507"
+                if(newKey.equals("linkedPlanServices")){
+                    //this is a list
+
+                    Set<String> members = jedis.smembers(key);
+                    List<Object> objects = new ArrayList<>();
+                    for(String member: members){
+                        objects.add(getPlan(member));
+                    }
+                    resultMap.put(newKey, objects);
+                }else{//like planCostShares, is an object
+                    //get the only element from set [members]
+                    //Iterator<String> iterator = members.iterator();
+                    System.out.println("check:   "+jedis.get(key));
+                    Map<String, String> object = jedis.hgetAll(jedis.get(key));
+                    Map<String, Object> nestedMap = new HashMap<>();
+                    for(String subKey:object.keySet()){
+                        nestedMap.put(subKey, isInteger(object.get(subKey))?Integer.parseInt(object.get(subKey)):object.get(subKey));
+                    }
+
+                    resultMap.put(newKey, nestedMap);
+                }
+            }
         }
-        return result;
+        return resultMap;
     }
 
     public Map<String, Object> deletePlan(String redisKey) {
