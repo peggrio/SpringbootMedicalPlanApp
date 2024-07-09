@@ -113,7 +113,7 @@ public class PlanController {
         return new ResponseEntity<>(result, HttpStatus.NO_CONTENT);
     }
 
-    @PutMapping(path = "/{objectType}/{objectId}")
+    @PutMapping(path = "/{objectType}/{objectId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updatePlan(@PathVariable String objectType,
                                         @PathVariable String objectId,
                                         @RequestBody(required = false) String planObject,
@@ -167,6 +167,39 @@ public class PlanController {
                 headersToSend,
                 HttpStatus.OK);
     }
+
+    @PatchMapping(value = "{objectType}/{objectId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> patchPlan(@PathVariable String objectType,
+                                       @PathVariable String objectId,
+                                       @RequestBody(required = false) String planObject,
+                                       @RequestHeader HttpHeaders headers){
+        if(planObject == null || planObject.isBlank())throw new BadRequestException("Request body is missing!");
+
+        JSONObject plan = new JSONObject(planObject);
+        String key = objectType +":"+objectId;
+        if(!planService.isKeyPresent(key))throw new ResourceNotFoundException("Plan not found!");
+
+        String eTag = planService.getETag(key);
+
+        System.out.println("eTag:" + eTag);
+
+        List<String> ifMatch;
+        try{
+            ifMatch = headers.getIfMatch();
+        }catch (Exception e) {
+            throw new ETagParseException("ETag value invalid! Make sure the ETag value is a string!");
+        }
+
+        if (ifMatch.size() == 0) throw new ETagParseException("ETag is not provided with request!");
+        if (!ifMatch.contains(eTag)) return preConditionFailed(eTag);
+
+        String updatedEtag = planService.createPlan(plan, key);
+
+        return ResponseEntity.ok()
+                .eTag(updatedEtag)
+                .body(new JSONObject().put("message: ", "Plan updated successfully!!").toString());
+    }
+
     private ResponseEntity preConditionFailed(String eTag){
         HttpHeaders headersToSend = new HttpHeaders();
         headersToSend.setETag(eTag);
