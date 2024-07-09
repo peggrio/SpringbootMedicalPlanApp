@@ -94,6 +94,19 @@ public class PlanController {
             throw new ResourceNotFoundException("Plan not found");
         }
 
+        String eTag = planService.getETag(key);
+        System.out.println("etag:"+eTag);
+        List<String> ifMatch;
+
+        try{
+            ifMatch = headers.getIfMatch();
+        }catch (Exception e){
+            throw new ETagParseException("ETag value is invalid! Make sure the ETag value is a string!");
+        }
+
+        if(ifMatch.size() == 0)throw new ETagParseException("ETag is missing in the request!");
+        if(!ifMatch.contains(eTag))return preConditionFailed(eTag);
+
         Map<String, Object> result = planService.getPlan(key);
         planService.deletePlan(key);
 

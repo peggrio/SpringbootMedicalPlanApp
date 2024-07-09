@@ -1,5 +1,6 @@
 package com.info7255.medicalplanapi.service;
 
+import io.lettuce.core.ScriptOutputType;
 import org.checkerframework.checker.units.qual.A;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -112,23 +113,16 @@ public class PlanService {
                 }
             }else{//they are sub objects, like plan:12xvxc345ssdsds-501:planCostShares
                 String newKey = key.substring((redisKey+":").length());//it extracts a substring from the string key, starting from the position equal to the length of the [redisKey:]
-                //Set<String> members = jedis.smembers(key);
-//                smembers plan:12xvxc345ssdsds-501:linkedPlanServices
-//                1) "planservice:27283xvx9asdff-504"
-//                2) "planservice:27283xvx9sdf-507"
-                if(newKey.equals("linkedPlanServices")){
-                    //this is a list
-
+                if(!jedis.type(key).equals("string")){// for set type in redis, like plan:12xvxc345ssdsds-501:linkedPlanServices
                     Set<String> members = jedis.smembers(key);
                     List<Object> objects = new ArrayList<>();
                     for(String member: members){
                         objects.add(getPlan(member));
                     }
                     resultMap.put(newKey, objects);
-                }else{//like planCostShares, is an object
+                }else{//for string type in redis, like plan:12xvxc345ssdsds-501:planCostShares
                     //get the only element from set [members]
                     //Iterator<String> iterator = members.iterator();
-                    System.out.println("check:   "+jedis.get(key));
                     Map<String, String> object = jedis.hgetAll(jedis.get(key));
                     Map<String, Object> nestedMap = new HashMap<>();
                     for(String subKey:object.keySet()){
@@ -142,16 +136,26 @@ public class PlanService {
         return resultMap;
     }
 
-    public Map<String, Object> deletePlan(String redisKey) {
-        Set<String> keys = jedis.keys(redisKey);
-        Map<String, Object> result = new HashMap<>();
+    public void deletePlan(String redisKey) {
+        Set<String> keys = jedis.keys(redisKey + ":*");
+        keys.add(redisKey);
+
         for (String key : keys) {
-            System.out.println(key);
-            Map<String, String> value = jedis.hgetAll(key);
-            result.put(redisKey,value);
+            System.out.println("print all:"+key);
+            if(key.equals(redisKey)){
+                jedis.del(new String[]{key});
+            }else{
+                if(!jedis.type(key).equals("string")){// for set type in redis, like plan:12xvxc345ssdsds-501:linkedPlanServices
+                    Set<String> members = jedis.smembers(key);
+                    for(String member: members){
+                        deletePlan(member);
+                    }
+                }else{
+                    jedis.del(jedis.get(key));
+                }
+                jedis.del(new String[]{key});
+            }
         }
-        jedis.del(redisKey);
-        return result;
     }
 
     public boolean isInteger(String s){
