@@ -1,7 +1,5 @@
 package com.info7255.medicalplanapi.service;
 
-import io.lettuce.core.ScriptOutputType;
-import org.checkerframework.checker.units.qual.A;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
