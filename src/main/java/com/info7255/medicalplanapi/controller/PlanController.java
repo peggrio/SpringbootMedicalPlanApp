@@ -1,6 +1,7 @@
 package com.info7255.medicalplanapi.controller;
 
 import com.info7255.medicalplanapi.model.ErrorResponse;
+import com.info7255.medicalplanapi.service.AuthService;
 import com.info7255.medicalplanapi.service.PlanService;
 import org.everit.json.schema.ValidationException;
 import org.everit.json.schema.loader.SchemaLoader;
@@ -19,12 +20,20 @@ public class PlanController {
     @Autowired
     private PlanService planService;
 
+    @Autowired
+    private AuthService authService;
+
     public PlanController(PlanService planService){
         this.planService = planService;
     }
 
     @PostMapping(path = "/plan", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createPlan(@RequestBody(required = false) String planObject) throws BadRequestException {
+    public ResponseEntity<?> createPlan(@RequestHeader HttpHeaders headers, @RequestBody(required = false) String planObject) throws BadRequestException {
+
+        if(!authService.authorizeToken(headers)){
+            return Unauthorized(authService.getErrorMessage());
+        }
+
         if(planObject == null ||planObject.isBlank()) {
             throw new BadRequestException("Request body is missing!");
         }
@@ -56,6 +65,10 @@ public class PlanController {
     public ResponseEntity<?> getPlan(@PathVariable String objectType,
                         @PathVariable String objectId,
                         @RequestHeader HttpHeaders headers){
+
+        if(!authService.authorizeToken(headers)){
+            return Unauthorized(authService.getErrorMessage());
+        }
 
         String key = objectType + ":" + objectId;
         if(!planService.isKeyPresent(key)){
@@ -89,6 +102,11 @@ public class PlanController {
     public ResponseEntity<?> deletePlan(@PathVariable String objectType,
                                         @PathVariable String objectId,
                                         @RequestHeader HttpHeaders headers) {
+
+        if(!authService.authorizeToken(headers)){
+            return Unauthorized(authService.getErrorMessage());
+        }
+
         String key = objectType + ":" + objectId;
         if (!planService.isKeyPresent(key)) {
             throw new ResourceNotFoundException("Plan not found");
@@ -118,6 +136,10 @@ public class PlanController {
                                         @PathVariable String objectId,
                                         @RequestBody(required = false) String planObject,
                                         @RequestHeader HttpHeaders headers){
+        if(!authService.authorizeToken(headers)){
+            return Unauthorized(authService.getErrorMessage());
+        }
+
         if(planObject == null || planObject.isBlank()){
             throw new BadRequestException("Request body is empty!");
         }
@@ -173,6 +195,10 @@ public class PlanController {
                                        @PathVariable String objectId,
                                        @RequestBody(required = false) String planObject,
                                        @RequestHeader HttpHeaders headers){
+        if(!authService.authorizeToken(headers)){
+            return Unauthorized(authService.getErrorMessage());
+        }
+
         if(planObject == null || planObject.isBlank())throw new BadRequestException("Request body is missing!");
 
         JSONObject plan = new JSONObject(planObject);
@@ -211,5 +237,16 @@ public class PlanController {
         );
         return new ResponseEntity<>(errorResponse,headersToSend,HttpStatus.PRECONDITION_FAILED);
 
+    }
+
+    private ResponseEntity Unauthorized(String message){
+        HttpHeaders headersToSend = new HttpHeaders();
+        ErrorResponse errorResponse = new ErrorResponse(
+                message,
+                HttpStatus.UNAUTHORIZED.value(),
+                new Date(),
+                HttpStatus.UNAUTHORIZED.getReasonPhrase()
+        );
+        return new ResponseEntity<>(errorResponse,headersToSend,HttpStatus.UNAUTHORIZED);
     }
 }
