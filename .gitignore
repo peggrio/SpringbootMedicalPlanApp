@@ -7,6 +7,9 @@ target/
 .DS_Store
 dump.rdb
 
+### secret storage ###
+src/main/resources/*.properties
+
 ### STS ###
 .apt_generated
 .classpath
