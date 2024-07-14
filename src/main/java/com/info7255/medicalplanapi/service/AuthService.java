@@ -1,27 +1,20 @@
 package com.info7255.medicalplanapi.service;
 
-import com.info7255.medicalplanapi.utils.GooglePublicKeyProvider;
+import com.google.api.client.json.webtoken.JsonWebSignature;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.auth0.jwt.interfaces.JWTVerifier;
-
-import java.io.IOException;
+import com.google.auth.oauth2.TokenVerifier;
 
 @Service
 public class AuthService {
 
-    private final GooglePublicKeyProvider keyProvider;
     private String errorMessage;
+    @Value("${secret.CLIENT_ID}")
+    private String clientID;
 
-    public AuthService() throws IOException {
-        keyProvider = new GooglePublicKeyProvider();
-    }
 
     public Boolean authorizeToken(@RequestHeader HttpHeaders headers) {
         String authorizationHeader = headers.getFirst("Authorization");
@@ -31,13 +24,18 @@ public class AuthService {
         }
 
         try {
-            Algorithm algorithm = Algorithm.RSA256(keyProvider);
-            JWTVerifier verifier = JWT.require(algorithm).build();
             String token = authorizationHeader.substring(7);
-            DecodedJWT jwt = verifier.verify(token);
+            System.out.println("token:"+ token);
+            TokenVerifier tokenVerifier = TokenVerifier.newBuilder()
+                    .setAudience(clientID)
+                    .build();
+
+            JsonWebSignature verifiedIdToken = tokenVerifier.verify(token);
+            System.out.println("Token verified successfully: " + verifiedIdToken.getPayload());
             return true;
-        } catch (JWTVerificationException exception) {
-            errorMessage = "Token invalid!!";
+        } catch (Exception e) {
+            System.out.println("Token verification failed: " + e.getMessage());
+            errorMessage = "Token invalid!!  "+e.getMessage();
             return false;
         }
     }
@@ -45,4 +43,6 @@ public class AuthService {
     public String getErrorMessage(){
         return errorMessage;
     }
+
+
 }
