@@ -3,6 +3,9 @@ package com.info7255.medicalplanapi.controller;
 import com.info7255.medicalplanapi.model.ErrorResponse;
 import com.info7255.medicalplanapi.service.AuthService;
 import com.info7255.medicalplanapi.service.PlanService;
+import com.info7255.medicalplanapi.service.KafkaProduceService;
+import com.info7255.medicalplanapi.errorHandler.*;
+
 import org.everit.json.schema.ValidationException;
 import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONObject;
@@ -10,7 +13,6 @@ import org.json.JSONTokener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import com.info7255.medicalplanapi.errorHandler.*;
 import org.everit.json.schema.Schema;
 
 import java.util.*;
@@ -22,6 +24,9 @@ public class PlanController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private KafkaProduceService kafkaService;
 
     public PlanController(PlanService planService){
         this.planService = planService;
@@ -54,6 +59,12 @@ public class PlanController {
             throw new BadRequestException("This object already exist.");
 
         String eTag = planService.createPlan(plan,key);
+        //Enqueue the data in kafka
+        try{
+            kafkaService.publish(planObject, "index");
+        }catch (Exception e){
+            throw new BadRequestException("Error occurred in Kafka publish: "+e.getMessage());
+        }
 
         //add etag to header
         HttpHeaders headersToSend = new HttpHeaders();
@@ -127,6 +138,13 @@ public class PlanController {
 
         Map<String, Object> result = planService.getPlan(key);
         planService.deletePlan(key);
+
+        //Enqueue the data in kafka
+        try{
+            kafkaService.publish(objectId, "delete");
+        }catch (Exception e){
+            throw new BadRequestException("Error occurred in Kafka publish: "+e.getMessage());
+        }
 
         return new ResponseEntity<>(result, HttpStatus.NO_CONTENT);
     }
