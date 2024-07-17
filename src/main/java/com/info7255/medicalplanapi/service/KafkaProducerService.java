@@ -4,19 +4,14 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
-import org.springframework.stereotype.Service;
-import org.springframework.util.concurrent.ListenableFuture;
-import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import java.util.concurrent.CompletableFuture;
 
 
 @Service
-public class KafkaProduceService {
+public class KafkaProducerService {
     @Value("${spring.kafka.topic.name}")
     private String topicName;
 
@@ -30,7 +25,7 @@ public class KafkaProduceService {
             if (ex != null) {
                 System.err.println("Failed to send message: " + ex.getMessage());
             } else {
-                System.out.println("Message sent successfully: " + result.getRecordMetadata());
+                System.out.println("Message sent successfully");
             }
         });
     }
