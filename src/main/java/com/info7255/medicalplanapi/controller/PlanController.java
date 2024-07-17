@@ -3,7 +3,7 @@ package com.info7255.medicalplanapi.controller;
 import com.info7255.medicalplanapi.model.ErrorResponse;
 import com.info7255.medicalplanapi.service.AuthService;
 import com.info7255.medicalplanapi.service.PlanService;
-import com.info7255.medicalplanapi.service.KafkaProduceService;
+import com.info7255.medicalplanapi.service.KafkaProducerService;
 import com.info7255.medicalplanapi.errorHandler.*;
 
 import org.everit.json.schema.ValidationException;
@@ -26,7 +26,7 @@ public class PlanController {
     private AuthService authService;
 
     @Autowired
-    private KafkaProduceService kafkaService;
+    private KafkaProducerService kafkaService;
 
     public PlanController(PlanService planService){
         this.planService = planService;
@@ -61,7 +61,7 @@ public class PlanController {
         String eTag = planService.createPlan(plan,key);
         //Enqueue the data in kafka
         try{
-            kafkaService.publish(planObject, "index");
+            kafkaService.publish(planObject, "SAVE");
         }catch (Exception e){
             throw new BadRequestException("Error occurred in Kafka publish: "+e.getMessage());
         }
@@ -141,7 +141,7 @@ public class PlanController {
 
         //Enqueue the data in kafka
         try{
-            kafkaService.publish(objectId, "delete");
+            kafkaService.publish(objectId, "DELETE");
         }catch (Exception e){
             throw new BadRequestException("Error occurred in Kafka publish: "+e.getMessage());
         }
