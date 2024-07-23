@@ -29,3 +29,6 @@ After starting the server, kick off the CLI:
 ```brew services start zookeeper```
 5. Create topic(in `/opt/homebrew/opt/kafka/bin`)
 ```kafka-topics --create --topic info7255 --bootstrap-server localhost:9092```
+
+## Future improvement
+Avoid storing "（quotation mark）in ETag

@@ -17,7 +17,6 @@ public class JedisConfiguration {
     }
 
     @Bean
-    @Autowired
     public RedisTemplate<String, Object> redisTemplate() {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(jedisConnectionFactory());
