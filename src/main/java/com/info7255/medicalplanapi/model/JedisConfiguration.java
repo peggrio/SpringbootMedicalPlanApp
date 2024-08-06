@@ -25,6 +25,7 @@ public class JedisConfiguration {
 
     @Bean
     public Jedis getJedis(){
-        return new JedisPool().getResource();
+        System.out.println("Jedis setup through config!!");
+        return new JedisPool("localhost", 6379).getResource();
     }
 }

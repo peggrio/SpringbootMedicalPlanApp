@@ -46,21 +46,14 @@ public class ElasticSearchConfig {
                 new UsernamePasswordCredentials(username, password));
 
         RestClientBuilder builder = RestClient.builder(
-                        new HttpHost("localhost", 9200, "http"))
+                        new HttpHost("localhost", 9200))
                 .setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
                     @Override
                     public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
                         return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
                     }
                 });
-
+        System.out.println("ES config finish!");
         return new RestHighLevelClient(builder);
-    }
-
-    private Header[] compatibilityHeaders() {
-        return new Header[]{
-                new BasicHeader(HttpHeaders.ACCEPT, "application/vnd.elasticsearch+json;compatible-with=7"),
-                new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/vnd.elasticsearch+json;compatible-with=7")
-        };
     }
 }
